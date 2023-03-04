@@ -4,7 +4,12 @@
   "license": "MIT",
   "scripts": {},
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "@nrwl/react": "^15.8.5",
+    "@trpc/client": "^10.14.0",
+    "@trpc/server": "^10.14.0",
+    "zod": "^3.21.0"
+  },
   "devDependencies": {
     "@nrwl/nx-cloud": "latest",
     "nx": "15.8.5",
