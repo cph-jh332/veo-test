@@ -23,11 +23,18 @@ export function App() {
   }, []);
 
   const addChild = (node: Omit<TChildInput, 'parentNode'>) => {
-    trpcClient.addChild.mutate({ parentNode: createNode.parentNode, ...node });
-    trpcClient.getChildOfNode.query(createNode.parentNode).then((res) => {
-      setData((currentData) => [...currentData, ...res]);
-      setCreateNode({ show: false, parentNode: 0 });
-    });
+    trpcClient.addChild
+      .mutate({ parentNode: createNode.parentNode, ...node })
+      .then((data) => {
+        setData((currentData) => [
+          ...currentData,
+          ...data.filter(
+            (incommingNode) =>
+              !currentData.some((node) => node.id === incommingNode.id)
+          ),
+        ]);
+        setCreateNode({ show: false, parentNode: 0 });
+      });
   };
 
   const toggleChildren = (parentNode: number) => {

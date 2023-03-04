@@ -17,13 +17,15 @@ const zodChildInput = z.object({
     
 export type TChildInput = z.infer<typeof zodChildInput>;
 
+const getChildrenOfNode = (parentId: number) => nodeTree.filter((node) => node.parentNode === parentId);
+
 export const appRouter = router({
     getRoots: publicProcedure.query(() =>
     nodeTree.filter((node) => node.height === 0)),
     getChildOfNode: publicProcedure
     .input(z.number())
     .query(({ input }) => 
-      nodeTree.filter((node) => node.parentNode === input)),
+      getChildrenOfNode(input)),
     addChild: publicProcedure
     .input(zodChildInput)
     .mutation(({ input }) => {
@@ -31,7 +33,7 @@ export const appRouter = router({
       const parent = nodeTree.find((node) => node.id === input.parentNode);
 
       //create new base node
-      const newNode = {
+      const newBaseNode = {
         id: nodeTree.length,
         name: input.name,
         parentNode: input.parentNode,
@@ -40,12 +42,18 @@ export const appRouter = router({
 
       //add new manager or developer node to the tree
       if (input.department) {
-        (newNode as TManagerNode).department = input.department;
-        nodeTree.push(newNode as TManagerNode);
-      } else if(input.prefferedLanguage) {
-        (newNode as TDeveloperNode).preferredLanguage = input.prefferedLanguage;
-        nodeTree.push(newNode as TDeveloperNode);
+        const managerNode = newBaseNode as TManagerNode;
+        managerNode.department = input.department;
+        nodeTree.push(managerNode);
+        return getChildrenOfNode(input.parentNode);
+      } else if (input.prefferedLanguage) {
+        const developerNode = newBaseNode as TDeveloperNode;
+        developerNode.preferredLanguage = input.prefferedLanguage;
+        nodeTree.push(developerNode);
+        return getChildrenOfNode(input.parentNode);
       }
+
+      throw new Error("Invalid input");
     }),
 });
 
