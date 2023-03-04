@@ -4,11 +4,17 @@ import {
   TManagerNode,
   TNodeTree,
 } from '@veo-test/db';
-import { useEffect, useState } from 'react';
+import { TChildInput } from '@veo-test/trpc';
+import { useEffect, useRef, useState } from 'react';
 import trpcClient from './trpcClient';
 
 export function App() {
   const [data, setData] = useState<TNodeTree>([]);
+
+  const [createNode, setCreateNode] = useState({
+    parentNode: 0,
+    show: false,
+  });
 
   useEffect(() => {
     trpcClient.getRoots.query().then((data) => {
@@ -16,17 +22,31 @@ export function App() {
     });
   }, []);
 
+  const addChild = (node: Omit<TChildInput, 'parentNode'>) => {
+    trpcClient.addChild.mutate({ parentNode: createNode.parentNode, ...node });
+  };
+
+  const openModal = (parentNode: number) => {
+    setCreateNode({ show: true, parentNode: parentNode });
+  };
+
   return (
-    <div>
+    <div className="p-4">
       {data.map((node) => {
         return (
           <NodeRender
             node={node}
-            creatNode={() => null}
+            creatNode={openModal}
             getChildNodes={() => null}
           />
         );
       })}
+      {createNode.show && (
+        <CreateNodeModal
+          onAdd={addChild}
+          onClose={() => setCreateNode({ show: false, parentNode: 0 })}
+        />
+      )}
     </div>
   );
 }
@@ -63,6 +83,104 @@ const NodeRender = ({
         >
           add child
         </button>
+      </div>
+    </div>
+  );
+};
+
+const CreateNodeModal = ({
+  onAdd,
+  onClose,
+}: {
+  onAdd: (node: Omit<TChildInput, 'parentNode'>) => void;
+  onClose: () => void;
+}) => {
+  const [name, setName] = useState('');
+  const prefferedLanguage = useRef<string>();
+  const department = useRef<string>();
+  const [isManager, setIsManager] = useState(false);
+
+  return (
+    <div
+      className="relative z-10"
+      aria-labelledby="modal-title"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+      <div className="fixed inset-0 z-12 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
+          <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+            <div className="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+              <form action="">
+                <label htmlFor="nameInput">Name</label>
+                <input
+                  className="border border-gray-300 rounded-xl ml-2 px-2"
+                  id="nameInput"
+                  type="text"
+                  onChange={(e) => {
+                    setName(e.currentTarget.value);
+                    department.current = undefined;
+                    prefferedLanguage.current = undefined;
+                  }}
+                />
+                <label className="ml-4" htmlFor="isManager">
+                  Manager
+                </label>
+                <input
+                  className="ml-2 mb-4"
+                  type="checkbox"
+                  id="isManager"
+                  onChange={(e) => setIsManager(e.currentTarget.checked)}
+                />
+                <br />
+                {isManager ? (
+                  <>
+                    <label htmlFor="department">Department</label>
+                    <input
+                      className="border border-gray-300 rounded-xl ml-2 px-2"
+                      type="text"
+                      id="department"
+                      onChange={(e) => {
+                        department.current = e.currentTarget.value;
+                      }}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <label htmlFor="language">Preffered Language</label>
+                    <input
+                      className="border border-gray-300 rounded-xl ml-2 px-2"
+                      type="text"
+                      id="language"
+                      onChange={(e) => {
+                        prefferedLanguage.current = e.currentTarget.value;
+                      }}
+                    />
+                  </>
+                )}
+              </form>
+              <br />
+              <div className="flex justify-end">
+                <button className="" onClick={onClose}>
+                  cancel
+                </button>
+                <button
+                  className="bg-blue-500 rounded-sm text-white px-2 h-fit ml-4"
+                  onClick={() =>
+                    onAdd({
+                      name,
+                      prefferedLanguage: prefferedLanguage.current,
+                      department: department.current,
+                    })
+                  }
+                >
+                  add
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
