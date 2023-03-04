@@ -37,3 +37,11 @@ export const nodeTree: (TManagerNode | TDeveloperNode)[] = [
 ]
 
 export type TNodeTree = typeof nodeTree;
+
+export const isManagerNode = (node: TNode): node is TManagerNode => {
+    return (node as TManagerNode).department !== undefined;
+}
+
+export const isDeveloperNode = (node: TNode): node is TDeveloperNode => {
+    return (node as TDeveloperNode).preferredLanguage !== undefined;
+}
