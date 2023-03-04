@@ -30,6 +30,18 @@ export function App() {
     });
   };
 
+  const toggleChildren = (parentNode: number) => {
+    if (data.some((n) => n.parentNode === parentNode)) {
+      setData((currentData) =>
+        currentData.filter((n) => n.parentNode !== parentNode)
+      );
+    } else {
+      trpcClient.getChildOfNode.query(parentNode).then((res) => {
+        setData((currentData) => [...currentData, ...res]);
+      });
+    }
+  };
+
   const openModal = (parentNode: number) => {
     setCreateNode({ show: true, parentNode: parentNode });
   };
@@ -41,9 +53,11 @@ export function App() {
         .map((node) => {
           return (
             <NodeRender
+              key={node.id}
+              nodeTree={data}
               node={node}
               creatNode={openModal}
-              getChildNodes={() => null}
+              getChildNodes={toggleChildren}
             />
           );
         })}
@@ -58,38 +72,59 @@ export function App() {
 }
 
 const NodeRender = ({
+  nodeTree,
   node,
   creatNode,
   getChildNodes,
 }: {
+  nodeTree: TNodeTree;
   node: TManagerNode | TDeveloperNode;
   creatNode: (parentNode: number) => void;
   getChildNodes: (parentNode: number) => void;
 }) => {
+  const renderChildren = (parentNode: number) => {
+    // get children of node
+    const children = nodeTree.filter((n) => n.parentNode === parentNode);
+    if (children.length > 0) {
+      return children.map((child) => (
+        <NodeRender
+          key={child.id}
+          nodeTree={nodeTree}
+          node={child}
+          creatNode={creatNode}
+          getChildNodes={getChildNodes}
+        />
+      ));
+    }
+  };
+
   return (
-    <div className="flex items-center">
-      <button onClick={() => getChildNodes(node.id)}>&#8964;</button>
-      <div className="flex items-center mb-2 ml-2 bg-gray-200 p-2 w-fit">
-        <div>
-          <div className="font-semibold flex">
-            <p>{node.name}</p>
-            <p className="ml-2 text-sm font-normal rounded-xl bg-green-300 px-2">
-              {isDeveloperNode(node) ? 'developer' : 'manager'}
-            </p>
+    <div>
+      <div className="flex items-center">
+        <button onClick={() => getChildNodes(node.id)}>&#8964;</button>
+        <div className="flex items-center mb-2 ml-2 bg-gray-200 p-2 w-fit">
+          <div>
+            <div className="font-semibold flex">
+              <p>{node.name}</p>
+              <p className="ml-2 text-sm font-normal rounded-xl bg-green-300 px-2">
+                {isDeveloperNode(node) ? 'developer' : 'manager'}
+              </p>
+            </div>
+            <div className="text-sm text-gray-600">
+              {isDeveloperNode(node)
+                ? `Prefers writing in ${node.preferredLanguage}`
+                : `Manages ${node.department}`}
+            </div>
           </div>
-          <div className="text-sm text-gray-600">
-            {isDeveloperNode(node)
-              ? `Prefers writing in ${node.preferredLanguage}`
-              : `Manages ${node.department}`}
-          </div>
+          <button
+            onClick={() => creatNode(node.id)}
+            className="ml-4 bg-blue-500 rounded-xl text-sm text-white px-2 h-fit"
+          >
+            add child
+          </button>
         </div>
-        <button
-          onClick={() => creatNode(node.id)}
-          className="ml-4 bg-blue-500 rounded-xl text-sm text-white px-2 h-fit"
-        >
-          add child
-        </button>
       </div>
+      <div className="ml-8">{renderChildren(node.id)}</div>
     </div>
   );
 };
