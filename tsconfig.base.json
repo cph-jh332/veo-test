@@ -15,8 +15,8 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "db": ["packages/db/src/index.ts"],
-      "trpc": ["packages/trpc/src/index.ts"]
+      "@veo-test/db": ["packages/db/src/index.ts"],
+      "@veo-test/trpc": ["packages/trpc/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
