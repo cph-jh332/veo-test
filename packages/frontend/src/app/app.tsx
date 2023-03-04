@@ -1,3 +1,8 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faChevronDown,
+  faChevronRight,
+} from '@fortawesome/free-solid-svg-icons';
 import {
   isDeveloperNode,
   TDeveloperNode,
@@ -5,7 +10,7 @@ import {
   TNodeTree,
 } from '@veo-test/db';
 import { TChildInput } from '@veo-test/trpc';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import trpcClient from './trpcClient';
 
 export function App() {
@@ -108,7 +113,13 @@ const NodeRender = ({
   return (
     <div>
       <div className="flex items-center">
-        <button onClick={() => getChildNodes(node.id)}>&#8964;</button>
+        <button onClick={() => getChildNodes(node.id)}>
+          {nodeTree.some((n) => n.parentNode === node.id) ? (
+            <FontAwesomeIcon accentHeight={32} icon={faChevronDown} />
+          ) : (
+            <FontAwesomeIcon accentHeight={32} icon={faChevronRight} />
+          )}
+        </button>
         <div className="flex items-center mb-2 ml-2 bg-gray-200 p-2 w-fit">
           <div>
             <div className="font-semibold flex">
