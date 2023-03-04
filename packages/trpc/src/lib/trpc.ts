@@ -19,6 +19,26 @@ export type TChildInput = z.infer<typeof zodChildInput>;
 
 const getChildrenOfNode = (parentId: number) => nodeTree.filter((node) => node.parentNode === parentId);
 
+const changeHeightOfChildren = (id: number) => {
+    nodeTree.forEach((node) => {
+        if (node.parentNode === id) {
+            node.height = node.height + 1;
+            changeHeightOfChildren(node.id);
+        }
+    });
+}
+
+export const changeParent = ({ id, newParentId }: {id: number, newParentId: number}) => {
+    //change parent of node and update height of node and all its children recursively
+    const node = nodeTree.find((node) => node.id === id);
+    if (node) {
+        node.parentNode = newParentId;
+        const newParent = nodeTree.find((node) => node.id === newParentId);
+        node.height = newParent ? newParent.height + 1 : 0;
+        changeHeightOfChildren(node.id);
+    }
+}
+
 export const appRouter = router({
     getRoots: publicProcedure.query(() =>
     nodeTree.filter((node) => node.height === 0)),
@@ -55,6 +75,12 @@ export const appRouter = router({
 
       throw new Error("Invalid input");
     }),
+    changeParent: publicProcedure
+    .input(z.object({
+      id: z.number(),
+      newParentId: z.number(),
+    }))
+    .mutation(({ input }) => changeParent(input)),
 });
 
 export type AppRouter = typeof appRouter;
