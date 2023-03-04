@@ -24,6 +24,10 @@ export function App() {
 
   const addChild = (node: Omit<TChildInput, 'parentNode'>) => {
     trpcClient.addChild.mutate({ parentNode: createNode.parentNode, ...node });
+    trpcClient.getChildOfNode.query(createNode.parentNode).then((res) => {
+      setData((currentData) => [...currentData, ...res]);
+      setCreateNode({ show: false, parentNode: 0 });
+    });
   };
 
   const openModal = (parentNode: number) => {
@@ -32,15 +36,17 @@ export function App() {
 
   return (
     <div className="p-4">
-      {data.map((node) => {
-        return (
-          <NodeRender
-            node={node}
-            creatNode={openModal}
-            getChildNodes={() => null}
-          />
-        );
-      })}
+      {data
+        .filter((n) => n.height === 0)
+        .map((node) => {
+          return (
+            <NodeRender
+              node={node}
+              creatNode={openModal}
+              getChildNodes={() => null}
+            />
+          );
+        })}
       {createNode.show && (
         <CreateNodeModal
           onAdd={addChild}
