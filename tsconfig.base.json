@@ -15,7 +15,8 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "db": ["packages/db/src/index.ts"]
+      "db": ["packages/db/src/index.ts"],
+      "trpc": ["packages/trpc/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
