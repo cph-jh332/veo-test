@@ -1,15 +1,22 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import styles from './app.module.scss';
-
-import NxWelcome from './nx-welcome';
+import { TNodeTree } from '@veo-test/db';
+import { useEffect, useState } from 'react';
+import trpcClient from './trpcClient';
 
 export function App() {
-  return (
-    <>
-      <NxWelcome title="frontend" />
+  const [data, setData] = useState<TNodeTree>([]);
 
-      <div />
-    </>
+  useEffect(() => {
+    trpcClient.getRoots.query().then((data) => {
+      setData(data);
+    });
+  }, []);
+
+  return (
+    <ul>
+      {data.map((node) => (
+        <li key={node.id}>{node.name}</li>
+      ))}
+    </ul>
   );
 }
 
