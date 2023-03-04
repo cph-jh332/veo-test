@@ -80,7 +80,10 @@ export const appRouter = router({
       id: z.number(),
       newParentId: z.number(),
     }))
-    .mutation(({ input }) => changeParent(input)),
+    .mutation(({ input }) => {
+      changeParent(input);
+      return getChildrenOfNode(input.newParentId);
+    }),
 });
 
 export type AppRouter = typeof appRouter;

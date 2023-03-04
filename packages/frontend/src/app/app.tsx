@@ -22,18 +22,18 @@ export function App() {
   });
 
   useEffect(() => {
-    trpcClient.getRoots.query().then((data) => {
-      setData(data);
+    trpcClient.getRoots.query().then((res) => {
+      setData(res);
     });
   }, []);
 
   const addChild = (node: Omit<TChildInput, 'parentNode'>) => {
     trpcClient.addChild
       .mutate({ parentNode: createNode.parentNode, ...node })
-      .then((data) => {
+      .then((res) => {
         setData((currentData) => [
           ...currentData,
-          ...data.filter(
+          ...res.filter(
             (incommingNode) =>
               !currentData.some((node) => node.id === incommingNode.id)
           ),
@@ -58,6 +58,21 @@ export function App() {
     setCreateNode({ show: true, parentNode: parentNode });
   };
 
+  const changeParent = (id: number, newParentId: number) => {
+    trpcClient.changeParent.mutate({ id, newParentId }).then((res) => {
+      setData((currentData) => {
+        const newData = currentData.filter((n) => n.id !== id);
+        return [
+          ...newData,
+          ...res.filter(
+            (incommingNode) =>
+              !newData.some((node) => node.id === incommingNode.id)
+          ),
+        ];
+      });
+    });
+  };
+
   return (
     <div className="p-4">
       {data
@@ -70,6 +85,7 @@ export function App() {
               node={node}
               creatNode={openModal}
               getChildNodes={toggleChildren}
+              changeParent={changeParent}
             />
           );
         })}
@@ -88,11 +104,13 @@ const NodeRender = ({
   node,
   creatNode,
   getChildNodes,
+  changeParent,
 }: {
   nodeTree: TNodeTree;
   node: TManagerNode | TDeveloperNode;
   creatNode: (parentNode: number) => void;
   getChildNodes: (parentNode: number) => void;
+  changeParent: (id: number, newParentId: number) => void;
 }) => {
   const renderChildren = (parentNode: number) => {
     // get children of node
@@ -105,6 +123,7 @@ const NodeRender = ({
           node={child}
           creatNode={creatNode}
           getChildNodes={getChildNodes}
+          changeParent={changeParent}
         />
       ));
     }
@@ -120,7 +139,18 @@ const NodeRender = ({
             <FontAwesomeIcon accentHeight={32} icon={faChevronRight} />
           )}
         </button>
-        <div className="flex items-center mb-2 ml-2 bg-gray-200 p-2 w-fit">
+        <div
+          draggable
+          data-nodeid={node.id}
+          onDrop={(e) =>
+            changeParent(Number(e.dataTransfer.getData('nodeId')), node.id)
+          }
+          onDragStart={(e) =>
+            e.dataTransfer.setData('nodeId', node.id.toString())
+          }
+          onDragOver={(e) => e.preventDefault()}
+          className="flex items-center mb-2 ml-2 bg-gray-200 p-2 w-fit"
+        >
           <div>
             <div className="font-semibold flex">
               <p>{node.name}</p>
